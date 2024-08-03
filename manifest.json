@@ -1,0 +1,50 @@
+{
+    "manifest_version": 3,
+    "name": "Gmail Assistant",
+    "short_name": "gmailassistant",
+    "version": "1.0",
+    "author": "Your Name",
+
+    "description": "A Gmail extension for email analysis and automatic replies using GPT-4 and HTMX",
+
+    "content_scripts": [
+        {
+            "matches": [ "*://mail.google.com/*" ],
+            "js": [
+                "src/extensionInjector.js"
+            ],
+            "run_at": "document_start"
+        }
+    ],
+
+    "web_accessible_resources": [{
+        "resources": [
+            "dist/gmailJsLoader.js",
+            "dist/extension.js",
+            "dist/gmailJsLoader.js.map",
+            "dist/extension.js.map"
+        ],
+        "matches": ["<all_urls>"]
+    }],
+    "host_permissions": [
+        "https://*.google.com/*"
+    ],
+    "permissions": [
+        "storage",
+        "unlimitedStorage"
+    ],
+    "action": {
+        "default_icon": {
+            "16": "icons/icon16.png",
+            "48": "icons/icon48.png",
+            "128": "icons/icon128.png"
+        },
+        "default_title": "Gmail Assistant"
+    },
+    "icons": {
+        "16": "icons/icon16.png",
+        "32": "icons/icon32.png",
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
+    }
+}

@@ -1,0 +1,25 @@
+{
+    "name": "gmail-assistant",
+    "version": "1.0.0",
+    "description": "A Gmail extension for email analysis and automatic replies using GPT-4 and HTMX",
+    "main": "",
+    "scripts": {
+        "deps": "npm install",
+        "stage": "mkdir dist || echo Dist already exists.",
+        "bundle": "esbuild src/gmailJsLoader.js src/extension.js --outdir=dist/ --bundle --sourcemap --target=es6",
+        "build": "npm run stage && npm run bundle",
+        "dev": "npm run bundle -- --watch"
+    },
+    "author": "Your Name",
+    "license": "ISC",
+    "dependencies": {
+        "gmail-js": "^1.1.14",
+        "htmx.org": "^1.9.5",
+        "jquery": "^4.0.0-beta",
+        "sqlite": "^5.1.1",
+        "sqlite3": "^5.1.7"
+    },
+    "devDependencies": {
+        "esbuild": "^0.23.0"
+    }
+}
