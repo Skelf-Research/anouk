@@ -1,5 +1,6 @@
 "use strict";
 
+import $ from 'jquery';
 import { generateSummary, extractStructuredData, generateReply, generateInboxSummary } from './api.js';
 
 // loader-code: wait until gmailjs has finished loading, before triggering actual extension-code.
@@ -21,8 +22,8 @@ function startExtension(gmail) {
         const userEmail = gmail.get.user_email();
         console.log("Hello, " + userEmail + ". This is your Gmail Assistant!");
 
-        // Inject sidebar
-        injectSidebar();
+        // Inject sidebar and floating button
+        injectSidebarAndButton();
 
         gmail.observe.on("view_email", (domEmail) => {
             console.log("Looking at email:", domEmail);
@@ -38,83 +39,125 @@ function startExtension(gmail) {
     });
 }
 
-function injectSidebar() {
-    const sidebar = document.createElement('div');
-    sidebar.id = 'gmail-assistant-sidebar';
-    sidebar.innerHTML = `
-        <h2>Gmail Assistant</h2>
-        <div id="email-summary">
-            <h3>Email Summary</h3>
-            <p>Loading...</p>
-        </div>
-        <div id="structured-data">
-            <h3>Structured Data</h3>
-            <p>Loading...</p>
-        </div>
-        <div id="potential-reply">
-            <h3>Potential Reply</h3>
-            <p>Loading...</p>
-        </div>
-        <div id="inbox-summary">
-            <h3>Inbox Summary</h3>
-            <p>Loading...</p>
-        </div>
-        <div id="auto-reply-status">
-            <h3>Automatic Reply Status</h3>
-            <p>No automatic reply sent</p>
-        </div>
-        <button id="send-auto-reply">
-            Send Automatic Reply
+function injectSidebarAndButton() {
+    // Inject floating button
+    $('body').append(`
+        <button id="gmail-assistant-toggle" class="gmail-assistant-toggle">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 16v-4"></path>
+                <path d="M12 8h.01"></path>
+            </svg>
         </button>
-    `;
-    document.body.appendChild(sidebar);
+    `);
+
+    // Inject sidebar
+    $('body').append(`
+        <div id="gmail-assistant-sidebar" class="gmail-assistant-sidebar">
+            <h2>Gmail Assistant</h2>
+            <div id="email-summary">
+                <h3>Email Summary</h3>
+                <p>Loading...</p>
+            </div>
+            <div id="structured-data">
+                <h3>Structured Data</h3>
+                <p>Loading...</p>
+            </div>
+            <div id="potential-reply">
+                <h3>Potential Reply</h3>
+                <p>Loading...</p>
+            </div>
+            <div id="inbox-summary">
+                <h3>Inbox Summary</h3>
+                <p>Loading...</p>
+            </div>
+            <div id="auto-reply-status">
+                <h3>Automatic Reply Status</h3>
+                <p>No automatic reply sent</p>
+            </div>
+            <button id="send-auto-reply">
+                Send Automatic Reply
+            </button>
+        </div>
+    `);
 
     // Add event listener for auto-reply button
-    document.getElementById('send-auto-reply').addEventListener('click', handleAutoReply);
+    $('#send-auto-reply').on('click', handleAutoReply);
+
+    // Add event listener for toggle button
+    $('#gmail-assistant-toggle').on('click', toggleSidebar);
 
     // Inject CSS
-    const style = document.createElement('style');
-    style.textContent = `
-        #gmail-assistant-sidebar {
-            position: fixed;
-            right: 0;
-            top: 0;
-            width: 300px;
-            height: 100%;
-            background: white;
-            border-left: 1px solid #ccc;
-            padding: 20px;
-            overflow-y: auto;
-            z-index: 1000;
-        }
-        #gmail-assistant-sidebar h2 {
-            margin-top: 0;
-        }
-        #gmail-assistant-sidebar h3 {
-            margin-top: 20px;
-        }
-        #gmail-assistant-sidebar pre {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-        .loading {
-            color: #888;
-            font-style: italic;
-        }
-        button {
-            margin-top: 10px;
-            padding: 5px 10px;
-            background-color: #4285f4;
-            color: white;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #3367d6;
-        }
-    `;
-    document.head.appendChild(style);
+    $('head').append(`
+        <style>
+            .gmail-assistant-toggle {
+                position: fixed;
+                right: 20px;
+                bottom: 20px;
+                width: 50px;
+                height: 50px;
+                border-radius: 25px;
+                background-color: #4285f4;
+                color: white;
+                border: none;
+                cursor: pointer;
+                z-index: 1100;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            }
+            .gmail-assistant-toggle:hover {
+                background-color: #3367d6;
+            }
+            .gmail-assistant-sidebar {
+                position: fixed;
+                right: -300px;
+                top: 0;
+                width: 300px;
+                height: 100%;
+                background: white;
+                border-left: 1px solid #ccc;
+                padding: 20px;
+                overflow-y: auto;
+                z-index: 1000;
+                transition: right 0.3s ease-in-out;
+            }
+            .gmail-assistant-sidebar.open {
+                right: 0;
+            }
+            .gmail-assistant-sidebar h2 {
+                margin-top: 0;
+            }
+            .gmail-assistant-sidebar h3 {
+                margin-top: 20px;
+            }
+            .gmail-assistant-sidebar pre {
+                white-space: pre-wrap;
+                word-wrap: break-word;
+            }
+            .loading {
+                color: #888;
+                font-style: italic;
+            }
+            button {
+                margin-top: 10px;
+                padding: 5px 10px;
+                background-color: #4285f4;
+                color: white;
+                border: none;
+                border-radius: 3px;
+                cursor: pointer;
+            }
+            button:hover {
+                background-color: #3367d6;
+            }
+        </style>
+    `);
+}
+
+function toggleSidebar() {
+    $('#gmail-assistant-sidebar').toggleClass('open');
 }
 
 async function analyzeEmail(emailData) {
@@ -122,29 +165,29 @@ async function analyzeEmail(emailData) {
         console.log("Email analysis");
         console.log(emailData.content_html);
 
-        const summary = await generateSummary(emailData.content_html);
-        document.getElementById('email-summary').innerHTML = `
+        const summary = await generateSummary(emailData.content_html, emailData.id);
+        $('#email-summary').html(`
             <h3>Email Summary</h3>
             <p>${summary}</p>
-        `;
+        `);
 
-        const structuredData = await extractStructuredData(emailData.content_html);
-        document.getElementById('structured-data').innerHTML = `
+        const structuredData = await extractStructuredData(emailData.content_html, emailData.id);
+        $('#structured-data').html(`
             <h3>Structured Data</h3>
             <pre>${JSON.stringify(structuredData, null, 2)}</pre>
-        `;
+        `);
 
-        const reply = await generateReply(emailData.content_html);
-        document.getElementById('potential-reply').innerHTML = `
+        const reply = await generateReply(emailData.content_html, emailData.id);
+        $('#potential-reply').html(`
             <h3>Potential Reply</h3>
             <p>${reply}</p>
-        `;
+        `);
 
         const inboxSummary = await getInboxSummary();
-        document.getElementById('inbox-summary').innerHTML = `
+        $('#inbox-summary').html(`
             <h3>Inbox Summary</h3>
             <p>${inboxSummary}</p>
-        `;
+        `);
     } catch (error) {
         console.error('Error analyzing email:', error);
     }
@@ -166,9 +209,9 @@ async function handleAutoReply() {
     const matchedRule = matchesAutoReplyRule(emailData);
     if (matchedRule) {
         await sendAutomaticReply(emailData, matchedRule);
-        document.getElementById('auto-reply-status').innerHTML = '<p>Automatic reply sent</p>';
+        $('#auto-reply-status').html('<p>Automatic reply sent</p>');
     } else {
-        document.getElementById('auto-reply-status').innerHTML = '<p>No matching rule for automatic reply</p>';
+        $('#auto-reply-status').html('<p>No matching rule for automatic reply</p>');
     }
 }
 

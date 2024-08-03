@@ -41,7 +41,25 @@ class APIQueue {
 
 const apiQueue = new APIQueue();
 
-async function callOpenAI(instruction, content) {
+// Cache helper functions
+function getCachedResponse(key) {
+    const cachedData = localStorage.getItem(key);
+    return cachedData ? JSON.parse(cachedData) : null;
+}
+
+function setCachedResponse(key, data) {
+    localStorage.setItem(key, JSON.stringify(data));
+}
+
+async function callOpenAI(instruction, content, emailId, cacheKey) {
+    const cacheFullKey = `${emailId}_${cacheKey}`;
+    const cachedResponse = getCachedResponse(cacheFullKey);
+    
+    if (cachedResponse) {
+        console.log(`Using cached response for ${cacheFullKey}`);
+        return cachedResponse;
+    }
+
     return apiQueue.enqueue(async () => {
         const response = await fetch('https://api.together.xyz/v1/chat/completions', {
             method: 'POST',
@@ -63,23 +81,27 @@ async function callOpenAI(instruction, content) {
         }
 
         const result = await response.json();
-        return result.choices[0].message.content;
+        const apiResponse = result.choices[0].message.content;
+        
+        setCachedResponse(cacheFullKey, apiResponse);
+        return apiResponse;
     });
 }
 
-export async function generateSummary(emailBody) {
-    return await callOpenAI('Summarize the following email:', emailBody);
+export async function generateSummary(emailBody, emailId) {
+    return await callOpenAI('Summarize the following email:', emailBody, emailId, 'summary');
 }
 
-export async function extractStructuredData(emailBody) {
-    const jsonString = await callOpenAI('Extract key information from this email as JSON. Do not share anything other than the JSON in the reply.', emailBody);
-    return JSON.parse(jsonString);
+export async function extractStructuredData(emailBody, emailId) {
+    const jsonString = await callOpenAI('Extract key information from this email as YAML. Do not share anything other than the YAML in the reply.', emailBody, emailId, 'structured_data');
+    return jsonString;
 }
 
-export async function generateReply(emailBody) {
-    return await callOpenAI('Generate a potential reply to this email:', emailBody);
+export async function generateReply(emailBody, emailId) {
+    return await callOpenAI('Generate a potential reply to this email:', emailBody, emailId, 'reply');
 }
 
 export async function generateInboxSummary(emailSummaries) {
-    return await callOpenAI('Summarize the state of this inbox based on these recent emails:', emailSummaries);
+    // Note: Inbox summary is not cached as it's based on multiple emails
+    return await callOpenAI('Summarize the state of this inbox based on these recent emails:', emailSummaries, 'inbox', 'inbox_summary');
 }
