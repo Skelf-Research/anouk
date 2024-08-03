@@ -6036,33 +6036,50 @@ ${content}` }
     jquery_module_default("body").append(`
         <div id="gmail-assistant-sidebar" class="gmail-assistant-sidebar">
             <h2>Gmail Assistant</h2>
-            <div id="email-summary">
-                <h3>Email Summary</h3>
-                <p>Loading...</p>
+            <div class="tabs">
+                <button class="tab-button active" data-tab="inbox">Inbox</button>
+                <button class="tab-button" data-tab="email">Email</button>
+                <button class="tab-button" data-tab="actions">Actions</button>
             </div>
-            <div id="structured-data">
-                <h3>Structured Data</h3>
-                <p>Loading...</p>
+            <div id="inbox-tab" class="tab-content active">
+                <div id="inbox-summary">
+                    <h3>Inbox Summary</h3>
+                    <p>Loading...</p>
+                </div>
             </div>
-            <div id="potential-reply">
-                <h3>Potential Reply</h3>
-                <p>Loading...</p>
+            <div id="email-tab" class="tab-content">
+                <div id="email-summary">
+                    <h3>Email Summary</h3>
+                    <p>Loading...</p>
+                </div>
+                <div id="potential-reply">
+                    <h3>Potential Reply</h3>
+                    <p>Loading...</p>
+                </div>
             </div>
-            <div id="inbox-summary">
-                <h3>Inbox Summary</h3>
-                <p>Loading...</p>
+            <div id="actions-tab" class="tab-content">
+                <div id="structured-data">
+                    <h3>Structured Data</h3>
+                    <p>Loading...</p>
+                </div>
+                <div id="auto-reply-status">
+                    <h3>Automatic Reply Status</h3>
+                    <p>No automatic reply sent</p>
+                </div>
+                <button id="send-auto-reply">
+                    Send Automatic Reply
+                </button>
             </div>
-            <div id="auto-reply-status">
-                <h3>Automatic Reply Status</h3>
-                <p>No automatic reply sent</p>
-            </div>
-            <button id="send-auto-reply">
-                Send Automatic Reply
-            </button>
         </div>
     `);
     jquery_module_default("#send-auto-reply").on("click", handleAutoReply);
     jquery_module_default("#gmail-assistant-toggle").on("click", toggleSidebar);
+    jquery_module_default(".tab-button").on("click", function() {
+      jquery_module_default(".tab-button").removeClass("active");
+      jquery_module_default(this).addClass("active");
+      jquery_module_default(".tab-content").removeClass("active");
+      jquery_module_default(`#${jquery_module_default(this).data("tab")}-tab`).addClass("active");
+    });
     jquery_module_default("head").append(`
         <style>
             .gmail-assistant-toggle {
@@ -6076,7 +6093,7 @@ ${content}` }
                 color: white;
                 border: none;
                 cursor: pointer;
-                z-index: 1100;
+                z-index: 1000;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -6127,6 +6144,29 @@ ${content}` }
             button:hover {
                 background-color: #3367d6;
             }
+            .tabs {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 20px;
+            }
+            .tab-button {
+                flex-grow: 1;
+                background-color: #f1f3f4;
+                color: #5f6368;
+                border: none;
+                padding: 10px;
+                cursor: pointer;
+            }
+            .tab-button.active {
+                background-color: #4285f4;
+                color: white;
+            }
+            .tab-content {
+                display: none;
+            }
+            .tab-content.active {
+                display: block;
+            }
         </style>
     `);
   }
@@ -6153,28 +6193,36 @@ ${content}` }
             <h3>Potential Reply</h3>
             <p>${reply}</p>
         `);
+        yield updateInboxSummary();
+      } catch (error) {
+        console.error("Error analyzing email:", error);
+      }
+    });
+  }
+  function updateInboxSummary() {
+    return __async(this, null, function* () {
+      try {
         const inboxSummary = yield getInboxSummary();
         jquery_module_default("#inbox-summary").html(`
             <h3>Inbox Summary</h3>
             <p>${inboxSummary}</p>
         `);
       } catch (error) {
-        console.error("Error analyzing email:", error);
+        console.error("Error updating inbox summary:", error);
+        jquery_module_default("#inbox-summary").html(`
+            <h3>Inbox Summary</h3>
+            <p>Unable to generate inbox summary</p>
+        `);
       }
     });
   }
   function getInboxSummary() {
     return __async(this, null, function* () {
-      try {
-        const emails = yield getRecentEmails(10);
-        const emailSummaries = emails.map((email) => `Subject: ${email.subject}
+      const emails = yield getRecentEmails(10);
+      const emailSummaries = emails.map((email) => `Subject: ${email.subject}
 From: ${email.from}
 Snippet: ${email.snippet}`).join("\n\n");
-        return yield generateInboxSummary(emailSummaries);
-      } catch (error) {
-        console.error("Error generating inbox summary:", error);
-        return "Unable to generate inbox summary";
-      }
+      return yield generateInboxSummary(emailSummaries);
     });
   }
   function handleAutoReply() {

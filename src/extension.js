@@ -51,33 +51,44 @@ function injectSidebarAndButton() {
         </button>
     `);
 
-    // Inject sidebar
+    // Inject sidebar with tabs
     $('body').append(`
         <div id="gmail-assistant-sidebar" class="gmail-assistant-sidebar">
             <h2>Gmail Assistant</h2>
-            <div id="email-summary">
-                <h3>Email Summary</h3>
-                <p>Loading...</p>
+            <div class="tabs">
+                <button class="tab-button active" data-tab="inbox">Inbox</button>
+                <button class="tab-button" data-tab="email">Email</button>
+                <button class="tab-button" data-tab="actions">Actions</button>
             </div>
-            <div id="structured-data">
-                <h3>Structured Data</h3>
-                <p>Loading...</p>
+            <div id="inbox-tab" class="tab-content active">
+                <div id="inbox-summary">
+                    <h3>Inbox Summary</h3>
+                    <p>Loading...</p>
+                </div>
             </div>
-            <div id="potential-reply">
-                <h3>Potential Reply</h3>
-                <p>Loading...</p>
+            <div id="email-tab" class="tab-content">
+                <div id="email-summary">
+                    <h3>Email Summary</h3>
+                    <p>Loading...</p>
+                </div>
+                <div id="potential-reply">
+                    <h3>Potential Reply</h3>
+                    <p>Loading...</p>
+                </div>
             </div>
-            <div id="inbox-summary">
-                <h3>Inbox Summary</h3>
-                <p>Loading...</p>
+            <div id="actions-tab" class="tab-content">
+                <div id="structured-data">
+                    <h3>Structured Data</h3>
+                    <p>Loading...</p>
+                </div>
+                <div id="auto-reply-status">
+                    <h3>Automatic Reply Status</h3>
+                    <p>No automatic reply sent</p>
+                </div>
+                <button id="send-auto-reply">
+                    Send Automatic Reply
+                </button>
             </div>
-            <div id="auto-reply-status">
-                <h3>Automatic Reply Status</h3>
-                <p>No automatic reply sent</p>
-            </div>
-            <button id="send-auto-reply">
-                Send Automatic Reply
-            </button>
         </div>
     `);
 
@@ -86,6 +97,14 @@ function injectSidebarAndButton() {
 
     // Add event listener for toggle button
     $('#gmail-assistant-toggle').on('click', toggleSidebar);
+
+    // Add event listeners for tab buttons
+    $('.tab-button').on('click', function() {
+        $('.tab-button').removeClass('active');
+        $(this).addClass('active');
+        $('.tab-content').removeClass('active');
+        $(`#${$(this).data('tab')}-tab`).addClass('active');
+    });
 
     // Inject CSS
     $('head').append(`
@@ -101,7 +120,7 @@ function injectSidebarAndButton() {
                 color: white;
                 border: none;
                 cursor: pointer;
-                z-index: 1100;
+                z-index: 1000;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -120,7 +139,7 @@ function injectSidebarAndButton() {
                 border-left: 1px solid #ccc;
                 padding: 20px;
                 overflow-y: auto;
-                z-index: 1000;
+                z-index: 1100;
                 transition: right 0.3s ease-in-out;
             }
             .gmail-assistant-sidebar.open {
@@ -151,6 +170,29 @@ function injectSidebarAndButton() {
             }
             button:hover {
                 background-color: #3367d6;
+            }
+            .tabs {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 20px;
+            }
+            .tab-button {
+                flex-grow: 1;
+                background-color: #f1f3f4;
+                color: #5f6368;
+                border: none;
+                padding: 10px;
+                cursor: pointer;
+            }
+            .tab-button.active {
+                background-color: #4285f4;
+                color: white;
+            }
+            .tab-content {
+                display: none;
+            }
+            .tab-content.active {
+                display: block;
             }
         </style>
     `);
@@ -183,25 +225,32 @@ async function analyzeEmail(emailData) {
             <p>${reply}</p>
         `);
 
+        await updateInboxSummary();
+    } catch (error) {
+        console.error('Error analyzing email:', error);
+    }
+}
+
+async function updateInboxSummary() {
+    try {
         const inboxSummary = await getInboxSummary();
         $('#inbox-summary').html(`
             <h3>Inbox Summary</h3>
             <p>${inboxSummary}</p>
         `);
     } catch (error) {
-        console.error('Error analyzing email:', error);
+        console.error('Error updating inbox summary:', error);
+        $('#inbox-summary').html(`
+            <h3>Inbox Summary</h3>
+            <p>Unable to generate inbox summary</p>
+        `);
     }
 }
 
 async function getInboxSummary() {
-    try {
-        const emails = await getRecentEmails(10);
-        const emailSummaries = emails.map(email => `Subject: ${email.subject}\nFrom: ${email.from}\nSnippet: ${email.snippet}`).join('\n\n');
-        return await generateInboxSummary(emailSummaries);
-    } catch (error) {
-        console.error('Error generating inbox summary:', error);
-        return 'Unable to generate inbox summary';
-    }
+    const emails = await getRecentEmails(10);
+    const emailSummaries = emails.map(email => `Subject: ${email.subject}\nFrom: ${email.from}\nSnippet: ${email.snippet}`).join('\n\n');
+    return await generateInboxSummary(emailSummaries);
 }
 
 async function handleAutoReply() {
