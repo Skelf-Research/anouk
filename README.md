@@ -18,6 +18,16 @@ The framework includes the Gmail Assistant as a reference implementation showing
 
 ## Installation
 
+### From npm (Recommended)
+
+You can install Anouk directly from npm:
+
+```bash
+npm install anouk
+```
+
+### From Source
+
 1. Clone this repository:
    ```
    git clone https://github.com/yourusername/anouk.git
@@ -60,6 +70,12 @@ Examples:
   anouk init my-extension
   anouk generate extension email-analyzer
   anouk generate service custom-ai-service
+```
+
+When installed from npm, you can use the CLI tool directly from your terminal. If you're using npx, you can run:
+
+```
+npx anouk <command> [options]
 ```
 
 ## Configuration
@@ -118,6 +134,8 @@ const response = await aiService.call(
 );
 ```
 
+After installing from npm, you can import and use the Anouk framework in your own projects as shown above.
+
 ## Development
 
 - Run the development build with watch mode:
@@ -143,104 +161,6 @@ const response = await aiService.call(
 ## Dependencies
 
 - [gmail.js](https://github.com/KartikTalwar/gmail.js/): Library for interacting with Gmail
-- [esbuild](https://esbuild.github.io/): Fast JavaScript bundler
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Disclaimer
-
-This extension is not affiliated with or endorsed by Google. Use at your own risk and ensure compliance with Gmail's terms of service.
-
-## Installation
-
-1. Clone this repository:
-   ```
-   git clone https://github.com/yourusername/gmail-assistant.git
-   cd gmail-assistant
-   ```
-
-2. Install dependencies:
-   ```
-   npm install
-   ```
-
-3. Build the extension:
-   ```
-   npm run build
-   ```
-
-4. Load the extension in Chrome:
-   - Open Chrome and navigate to `chrome://extensions`
-   - Enable "Developer mode" in the top right corner
-   - Click "Load unpacked" and select the `dist` directory in the project folder
-
-## Configuration
-
-The extension now supports any OpenAI-compatible provider. You can configure the AI service through the settings panel in the extension UI or programmatically.
-
-### Using the Settings Panel
-
-1. Click the green settings button in the bottom-right corner of Gmail
-2. Enter your provider URL, API key, model name, and system prompt
-3. Click "Save Settings"
-
-### Programmatic Configuration
-
-You can also configure the AI service programmatically by modifying the `src/aiConfig.js` file or by passing configuration to the AIService constructor.
-
-### Supported Providers
-
-The extension has predefined configurations for:
-- Together.xyz (default)
-- OpenAI
-- Anthropic Claude
-- Ollama (local models)
-- Hugging Face
-
-Example configuration for OpenAI:
-```javascript
-{
-    providerUrl: 'https://api.openai.com/v1/chat/completions',
-    apiKey: 'your-openai-api-key',
-    model: 'gpt-4',
-    systemPrompt: 'You are a helpful assistant that analyzes emails.'
-}
-```
-
-## Usage
-
-1. Open Gmail in Chrome.
-2. The Gmail Assistant sidebar will appear on the right side of the screen.
-3. As you view emails, the assistant will automatically analyze them and provide summaries, structured data, and potential replies.
-4. Use the "Send Automatic Reply" button to trigger automatic replies based on predefined rules.
-
-## Development
-
-- Run the development build with watch mode:
-  ```
-  npm run dev
-  ```
-- The extension will automatically rebuild when you make changes to the source files.
-
-## Project Structure
-
-- `src/`: Source files
-  - `extension.js`: Main extension logic
-  - `api.js`: API interaction and caching logic
-  - `gmailJsLoader.js`: Gmail.js initialization
-- `dist/`: Built files (generated after running `npm run build`)
-- `manifest.json`: Chrome extension manifest file
-
-## Dependencies
-
-- [gmail.js](https://github.com/KartikTalwar/gmail.js/): Library for interacting with Gmail
-- [sqlite3](https://github.com/mapbox/node-sqlite3): SQLite database for caching
 - [esbuild](https://esbuild.github.io/): Fast JavaScript bundler
 
 ## Contributing
