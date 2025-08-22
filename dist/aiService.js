@@ -79,10 +79,44 @@
       this.config[key] = value;
       this.saveConfig(this.config);
     }
+    // Update multiple configuration values at once
+    updateConfigBatch(newConfig) {
+      this.config = __spreadValues(__spreadValues({}, this.config), newConfig);
+      this.saveConfig(this.config);
+    }
     // Reset to default configuration
     resetToDefault() {
       this.config = __spreadValues({}, this.defaultConfig);
       this.saveConfig(this.config);
+    }
+    // Get available preset configurations
+    getPresetConfigs() {
+      return {
+        together: {
+          providerUrl: "https://api.together.xyz/v1/chat/completions",
+          apiKey: "",
+          model: "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+          systemPrompt: "You are a helpful assistant that analyzes emails."
+        },
+        openai: {
+          providerUrl: "https://api.openai.com/v1/chat/completions",
+          apiKey: "",
+          model: "gpt-4-turbo",
+          systemPrompt: "You are a helpful assistant that analyzes emails."
+        },
+        anthropic: {
+          providerUrl: "https://api.anthropic.com/v1/messages",
+          apiKey: "",
+          model: "claude-3-sonnet-20240229",
+          systemPrompt: "You are a helpful assistant that analyzes emails."
+        },
+        ollama: {
+          providerUrl: "http://localhost:11434/api/chat",
+          apiKey: "",
+          model: "llama3",
+          systemPrompt: "You are a helpful assistant that analyzes emails."
+        }
+      };
     }
   };
   var configManager = new ConfigManager();
@@ -109,27 +143,35 @@
     makeRequest(instruction, content) {
       return __async(this, null, function* () {
         const currentConfig = configManager_default.getConfig();
+        const requestBody = {
+          model: currentConfig.model,
+          messages: [
+            { role: "system", content: currentConfig.systemPrompt },
+            { role: "user", content: `${instruction}
+
+${content}` }
+          ]
+        };
         const response = yield fetch(currentConfig.providerUrl, {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${currentConfig.apiKey}`,
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({
-            model: currentConfig.model,
-            messages: [
-              { role: "system", content: currentConfig.systemPrompt },
-              { role: "user", content: `${instruction}
-
-${content}` }
-            ]
-          })
+          body: JSON.stringify(requestBody)
         });
         if (!response.ok) {
-          throw new Error(`API call failed: ${response.statusText}`);
+          const errorText = yield response.text();
+          throw new Error(`API call failed: ${response.status} ${response.statusText} - ${errorText}`);
         }
         const result = yield response.json();
-        return result.choices[0].message.content;
+        if (result.choices && result.choices.length > 0) {
+          return result.choices[0].message.content;
+        } else if (result.message && result.message.content) {
+          return result.message.content;
+        } else {
+          return JSON.stringify(result);
+        }
       });
     }
     // Cache helper functions

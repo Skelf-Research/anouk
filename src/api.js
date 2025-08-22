@@ -1,12 +1,9 @@
 import AIService from './aiService.js';
+import configManager from './configManager.js';
 
-// Initialize AI service with default configuration
-// In a production environment, these values should be configurable
-const aiService = new AIService({
-    providerUrl: 'https://api.together.xyz/v1/chat/completions',
-    apiKey: '98a9f3a23cf7b83243500ead07874aca741dcb34c4031abd3129794411f594a7',
-    model: 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo'
-});
+// Initialize AI service with current configuration
+// This allows using any OpenAI-compatible provider with configurable URLs, models, and keys
+const aiService = new AIService();
 
 // Queue for API calls
 class APIQueue {
@@ -72,5 +69,5 @@ export async function generateInboxSummary(emailSummaries) {
     return await callAI('Summarize the state of this inbox based on these recent emails:', emailSummaries, 'inbox', 'inbox_summary');
 }
 
-// Export the AIService class for external configuration
-export { AIService };
+// Export the AIService instance and class for external configuration
+export { aiService, AIService };

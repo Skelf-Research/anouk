@@ -25,29 +25,44 @@ class AIService {
         // Reload config in case it was updated
         const currentConfig = configManager.getConfig();
         
+        // Prepare request body according to OpenAI API format
+        const requestBody = {
+            model: currentConfig.model,
+            messages: [
+                { role: 'system', content: currentConfig.systemPrompt },
+                { role: 'user', content: `${instruction}
+
+${content}` }
+            ]
+        };
+
         const response = await fetch(currentConfig.providerUrl, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${currentConfig.apiKey}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                model: currentConfig.model,
-                messages: [
-                    { role: 'system', content: currentConfig.systemPrompt },
-                    { role: 'user', content: `${instruction}
-
-${content}` }
-                ]
-            })
+            body: JSON.stringify(requestBody)
         });
 
         if (!response.ok) {
-            throw new Error(`API call failed: ${response.statusText}`);
+            const errorText = await response.text();
+            throw new Error(`API call failed: ${response.status} ${response.statusText} - ${errorText}`);
         }
 
         const result = await response.json();
-        return result.choices[0].message.content;
+        
+        // Handle different response formats from various providers
+        if (result.choices && result.choices.length > 0) {
+            // Standard OpenAI format
+            return result.choices[0].message.content;
+        } else if (result.message && result.message.content) {
+            // Some providers might use a different format
+            return result.message.content;
+        } else {
+            // Fallback for unexpected response formats
+            return JSON.stringify(result);
+        }
     }
 
     // Cache helper functions
