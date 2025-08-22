@@ -1755,7 +1755,7 @@
             "view_thread": {
               class: ["Bu", "nH"],
               // class depends if is_preview_pane - Bu for preview pane, nH for standard view
-              sub_selector: "div.if,div.iY",
+              selector: "div.iY",
               handler: function(match, callback) {
                 match = new api.dom.thread(match);
                 callback(match);
@@ -3387,7 +3387,7 @@
         script.parentNode.removeChild(script);
       }
     }
-    var version = "4.0.0-beta.2", rhtmlSuffix = /HTML$/i, jQuery3 = function(selector, context) {
+    var version = "4.0.0-rc.1", rhtmlSuffix = /HTML$/i, jQuery3 = function(selector, context) {
       return new jQuery3.fn.init(selector, context);
     };
     jQuery3.fn = jQuery3.prototype = {
@@ -4458,7 +4458,7 @@
     }
     function setFilters() {
     }
-    setFilters.prototype = jQuery3.expr.filters = jQuery3.expr.pseudos;
+    setFilters.prototype = jQuery3.expr.pseudos;
     jQuery3.expr.setFilters = new setFilters();
     function addCombinator(matcher, combinator, base) {
       var dir2 = combinator.dir, skip = combinator.next, key = skip || dir2, checkNonElements = base && key === "parentNode", doneName = done++;
@@ -5920,7 +5920,7 @@
     function getAll(context, tag) {
       var ret;
       if (typeof context.getElementsByTagName !== "undefined") {
-        ret = context.getElementsByTagName(tag || "*");
+        ret = arr.slice.call(context.getElementsByTagName(tag || "*"));
       } else if (typeof context.querySelectorAll !== "undefined") {
         ret = context.querySelectorAll(tag || "*");
       } else {
@@ -6345,8 +6345,8 @@
         },
         beforeunload: {
           postDispatch: function(event) {
-            if (event.result !== void 0 && event.originalEvent) {
-              event.originalEvent.returnValue = event.result;
+            if (event.result !== void 0) {
+              event.preventDefault();
             }
           }
         }
@@ -6825,7 +6825,7 @@
         ret + ""
       ) : ret;
     }
-    var cssPrefixes = ["Webkit", "Moz", "ms"], emptyStyle = document$1.createElement("div").style, vendorProps = {};
+    var cssPrefixes = ["Webkit", "Moz", "ms"], emptyStyle = document$1.createElement("div").style;
     function vendorPropName(name) {
       var capName = name[0].toUpperCase() + name.slice(1), i2 = cssPrefixes.length;
       while (i2--) {
@@ -6836,43 +6836,51 @@
       }
     }
     function finalPropName(name) {
-      var final = vendorProps[name];
-      if (final) {
-        return final;
-      }
       if (name in emptyStyle) {
         return name;
       }
-      return vendorProps[name] = vendorPropName(name) || name;
+      return vendorPropName(name) || name;
     }
-    (function() {
-      var reliableTrDimensionsVal, div = document$1.createElement("div");
-      if (!div.style) {
+    var reliableTrDimensionsVal, reliableColDimensionsVal, table = document$1.createElement("table");
+    function computeTableStyleTests() {
+      if (
+        // This is a singleton, we need to execute it only once
+        !table || // Finish early in limited (non-browser) environments
+        !table.style
+      ) {
         return;
       }
-      support.reliableTrDimensions = function() {
-        var table, tr, trStyle;
-        if (reliableTrDimensionsVal == null) {
-          table = document$1.createElement("table");
-          tr = document$1.createElement("tr");
-          table.style.cssText = "position:absolute;left:-11111px;border-collapse:separate";
-          tr.style.cssText = "box-sizing:content-box;border:1px solid";
-          tr.style.height = "1px";
-          div.style.height = "9px";
-          div.style.display = "block";
-          documentElement$1.appendChild(table).appendChild(tr).appendChild(div);
-          if (table.offsetWidth === 0) {
-            documentElement$1.removeChild(table);
-            return;
-          }
-          trStyle = window2.getComputedStyle(tr);
-          reliableTrDimensionsVal = Math.round(parseFloat(trStyle.height)) + Math.round(parseFloat(trStyle.borderTopWidth)) + Math.round(parseFloat(trStyle.borderBottomWidth)) === tr.offsetHeight;
-          documentElement$1.removeChild(table);
-        }
+      var trStyle, col = document$1.createElement("col"), tr = document$1.createElement("tr"), td = document$1.createElement("td");
+      table.style.cssText = "position:absolute;left:-11111px;border-collapse:separate;border-spacing:0";
+      tr.style.cssText = "box-sizing:content-box;border:1px solid;height:1px";
+      td.style.cssText = "height:9px;width:9px;padding:0";
+      col.span = 2;
+      documentElement$1.appendChild(table).appendChild(col).parentNode.appendChild(tr).appendChild(td).parentNode.appendChild(td.cloneNode(true));
+      if (table.offsetWidth === 0) {
+        documentElement$1.removeChild(table);
+        return;
+      }
+      trStyle = window2.getComputedStyle(tr);
+      reliableColDimensionsVal = isIE || Math.round(
+        parseFloat(
+          window2.getComputedStyle(col).width
+        )
+      ) === 18;
+      reliableTrDimensionsVal = Math.round(parseFloat(trStyle.height) + parseFloat(trStyle.borderTopWidth) + parseFloat(trStyle.borderBottomWidth)) === tr.offsetHeight;
+      documentElement$1.removeChild(table);
+      table = null;
+    }
+    jQuery3.extend(support, {
+      reliableTrDimensions: function() {
+        computeTableStyleTests();
         return reliableTrDimensionsVal;
-      };
-    })();
-    var rdisplayswap = /^(none|table(?!-c[ea]).+)/, cssShow = { position: "absolute", visibility: "hidden", display: "block" }, cssNormalTransform = {
+      },
+      reliableColDimensions: function() {
+        computeTableStyleTests();
+        return reliableColDimensionsVal;
+      }
+    });
+    var cssShow = { position: "absolute", visibility: "hidden", display: "block" }, cssNormalTransform = {
       letterSpacing: "0",
       fontWeight: "400"
     };
@@ -6931,13 +6939,7 @@
         (val === "auto" || // Support: IE 9 - 11+
         // Use offsetWidth/offsetHeight for when box sizing is unreliable.
         // In those cases, the computed value can be trusted to be border-box.
-        isIE && isBorderBox || // Support: IE 10 - 11+
-        // IE misreports `getComputedStyle` of table rows with width/height
-        // set in CSS while `offset*` properties report correct values.
-        // Support: Firefox 70+
-        // Firefox includes border widths
-        // in computed dimensions for table rows. (gh-4529)
-        !support.reliableTrDimensions() && nodeName(elem, "tr")) && // Make sure the element is visible & connected
+        isIE && isBorderBox || !support.reliableColDimensions() && nodeName(elem, "col") || !support.reliableTrDimensions() && nodeName(elem, "tr")) && // Make sure the element is visible & connected
         elem.getClientRects().length
       ) {
         isBorderBox = jQuery3.css(elem, "boxSizing", false, styles) === "border-box";
@@ -7026,13 +7028,7 @@
       jQuery3.cssHooks[dimension] = {
         get: function(elem, computed, extra) {
           if (computed) {
-            return rdisplayswap.test(jQuery3.css(elem, "display")) && // Support: Safari <=8 - 12+, Chrome <=73+
-            // Table columns in WebKit/Blink have non-zero offsetWidth & zero
-            // getBoundingClientRect().width unless display is changed.
-            // Support: IE <=11+
-            // Running getBoundingClientRect on a disconnected node
-            // in IE throws an error.
-            (!elem.getClientRects().length || !elem.getBoundingClientRect().width) ? swap(elem, cssShow, function() {
+            return jQuery3.css(elem, "display") === "none" ? swap(elem, cssShow, function() {
               return getWidthOrHeight(elem, dimension, extra);
             }) : getWidthOrHeight(elem, dimension, extra);
           }
@@ -8899,12 +8895,9 @@
         keepScripts = context;
         context = false;
       }
-      var base, parsed, scripts;
+      var parsed, scripts;
       if (!context) {
-        context = document$1.implementation.createHTMLDocument("");
-        base = context.createElement("base");
-        base.href = document$1.location.href;
-        context.head.appendChild(base);
+        context = new window2.DOMParser().parseFromString("", "text/html");
       }
       parsed = rsingleTag.exec(data);
       scripts = !keepScripts && [];
@@ -9183,6 +9176,7 @@
         jQuery3.ready(true);
       }
     };
+    jQuery3.expr[":"] = jQuery3.expr.filters = jQuery3.expr.pseudos;
     if (typeof define === "function" && define.amd) {
       define("jquery", [], function() {
         return jQuery3;
@@ -9221,14 +9215,14 @@
 
 jquery/dist-module/jquery.module.js:
   (*!
-   * jQuery JavaScript Library v4.0.0-beta.2
+   * jQuery JavaScript Library v4.0.0-rc.1
    * https://jquery.com/
    *
    * Copyright OpenJS Foundation and other contributors
    * Released under the MIT license
-   * https://jquery.org/license
+   * https://jquery.com/license/
    *
-   * Date: 2024-07-17T13:32Z
+   * Date: 2025-08-11T16:40Z
    *)
 */
 //# sourceMappingURL=gmailJsLoader.js.map

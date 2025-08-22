@@ -1,5 +1,21 @@
 "use strict";
 (() => {
+  var __defProp = Object.defineProperty;
+  var __getOwnPropSymbols = Object.getOwnPropertySymbols;
+  var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __propIsEnum = Object.prototype.propertyIsEnumerable;
+  var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+  var __spreadValues = (a, b) => {
+    for (var prop in b || (b = {}))
+      if (__hasOwnProp.call(b, prop))
+        __defNormalProp(a, prop, b[prop]);
+    if (__getOwnPropSymbols)
+      for (var prop of __getOwnPropSymbols(b)) {
+        if (__propIsEnum.call(b, prop))
+          __defNormalProp(a, prop, b[prop]);
+      }
+    return a;
+  };
   var __async = (__this, __arguments, generator) => {
     return new Promise((resolve, reject) => {
       var fulfilled = (value) => {
@@ -78,7 +94,7 @@
         script.parentNode.removeChild(script);
       }
     }
-    var version = "4.0.0-beta.2", rhtmlSuffix = /HTML$/i, jQuery2 = function(selector, context) {
+    var version = "4.0.0-rc.1", rhtmlSuffix = /HTML$/i, jQuery2 = function(selector, context) {
       return new jQuery2.fn.init(selector, context);
     };
     jQuery2.fn = jQuery2.prototype = {
@@ -1149,7 +1165,7 @@
     }
     function setFilters() {
     }
-    setFilters.prototype = jQuery2.expr.filters = jQuery2.expr.pseudos;
+    setFilters.prototype = jQuery2.expr.pseudos;
     jQuery2.expr.setFilters = new setFilters();
     function addCombinator(matcher, combinator, base) {
       var dir2 = combinator.dir, skip = combinator.next, key = skip || dir2, checkNonElements = base && key === "parentNode", doneName = done++;
@@ -2611,7 +2627,7 @@
     function getAll(context, tag) {
       var ret;
       if (typeof context.getElementsByTagName !== "undefined") {
-        ret = context.getElementsByTagName(tag || "*");
+        ret = arr.slice.call(context.getElementsByTagName(tag || "*"));
       } else if (typeof context.querySelectorAll !== "undefined") {
         ret = context.querySelectorAll(tag || "*");
       } else {
@@ -3036,8 +3052,8 @@
         },
         beforeunload: {
           postDispatch: function(event) {
-            if (event.result !== void 0 && event.originalEvent) {
-              event.originalEvent.returnValue = event.result;
+            if (event.result !== void 0) {
+              event.preventDefault();
             }
           }
         }
@@ -3516,7 +3532,7 @@
         ret + ""
       ) : ret;
     }
-    var cssPrefixes = ["Webkit", "Moz", "ms"], emptyStyle = document$1.createElement("div").style, vendorProps = {};
+    var cssPrefixes = ["Webkit", "Moz", "ms"], emptyStyle = document$1.createElement("div").style;
     function vendorPropName(name) {
       var capName = name[0].toUpperCase() + name.slice(1), i2 = cssPrefixes.length;
       while (i2--) {
@@ -3527,43 +3543,51 @@
       }
     }
     function finalPropName(name) {
-      var final = vendorProps[name];
-      if (final) {
-        return final;
-      }
       if (name in emptyStyle) {
         return name;
       }
-      return vendorProps[name] = vendorPropName(name) || name;
+      return vendorPropName(name) || name;
     }
-    (function() {
-      var reliableTrDimensionsVal, div = document$1.createElement("div");
-      if (!div.style) {
+    var reliableTrDimensionsVal, reliableColDimensionsVal, table = document$1.createElement("table");
+    function computeTableStyleTests() {
+      if (
+        // This is a singleton, we need to execute it only once
+        !table || // Finish early in limited (non-browser) environments
+        !table.style
+      ) {
         return;
       }
-      support.reliableTrDimensions = function() {
-        var table, tr, trStyle;
-        if (reliableTrDimensionsVal == null) {
-          table = document$1.createElement("table");
-          tr = document$1.createElement("tr");
-          table.style.cssText = "position:absolute;left:-11111px;border-collapse:separate";
-          tr.style.cssText = "box-sizing:content-box;border:1px solid";
-          tr.style.height = "1px";
-          div.style.height = "9px";
-          div.style.display = "block";
-          documentElement$1.appendChild(table).appendChild(tr).appendChild(div);
-          if (table.offsetWidth === 0) {
-            documentElement$1.removeChild(table);
-            return;
-          }
-          trStyle = window2.getComputedStyle(tr);
-          reliableTrDimensionsVal = Math.round(parseFloat(trStyle.height)) + Math.round(parseFloat(trStyle.borderTopWidth)) + Math.round(parseFloat(trStyle.borderBottomWidth)) === tr.offsetHeight;
-          documentElement$1.removeChild(table);
-        }
+      var trStyle, col = document$1.createElement("col"), tr = document$1.createElement("tr"), td = document$1.createElement("td");
+      table.style.cssText = "position:absolute;left:-11111px;border-collapse:separate;border-spacing:0";
+      tr.style.cssText = "box-sizing:content-box;border:1px solid;height:1px";
+      td.style.cssText = "height:9px;width:9px;padding:0";
+      col.span = 2;
+      documentElement$1.appendChild(table).appendChild(col).parentNode.appendChild(tr).appendChild(td).parentNode.appendChild(td.cloneNode(true));
+      if (table.offsetWidth === 0) {
+        documentElement$1.removeChild(table);
+        return;
+      }
+      trStyle = window2.getComputedStyle(tr);
+      reliableColDimensionsVal = isIE || Math.round(
+        parseFloat(
+          window2.getComputedStyle(col).width
+        )
+      ) === 18;
+      reliableTrDimensionsVal = Math.round(parseFloat(trStyle.height) + parseFloat(trStyle.borderTopWidth) + parseFloat(trStyle.borderBottomWidth)) === tr.offsetHeight;
+      documentElement$1.removeChild(table);
+      table = null;
+    }
+    jQuery2.extend(support, {
+      reliableTrDimensions: function() {
+        computeTableStyleTests();
         return reliableTrDimensionsVal;
-      };
-    })();
-    var rdisplayswap = /^(none|table(?!-c[ea]).+)/, cssShow = { position: "absolute", visibility: "hidden", display: "block" }, cssNormalTransform = {
+      },
+      reliableColDimensions: function() {
+        computeTableStyleTests();
+        return reliableColDimensionsVal;
+      }
+    });
+    var cssShow = { position: "absolute", visibility: "hidden", display: "block" }, cssNormalTransform = {
       letterSpacing: "0",
       fontWeight: "400"
     };
@@ -3622,13 +3646,7 @@
         (val === "auto" || // Support: IE 9 - 11+
         // Use offsetWidth/offsetHeight for when box sizing is unreliable.
         // In those cases, the computed value can be trusted to be border-box.
-        isIE && isBorderBox || // Support: IE 10 - 11+
-        // IE misreports `getComputedStyle` of table rows with width/height
-        // set in CSS while `offset*` properties report correct values.
-        // Support: Firefox 70+
-        // Firefox includes border widths
-        // in computed dimensions for table rows. (gh-4529)
-        !support.reliableTrDimensions() && nodeName(elem, "tr")) && // Make sure the element is visible & connected
+        isIE && isBorderBox || !support.reliableColDimensions() && nodeName(elem, "col") || !support.reliableTrDimensions() && nodeName(elem, "tr")) && // Make sure the element is visible & connected
         elem.getClientRects().length
       ) {
         isBorderBox = jQuery2.css(elem, "boxSizing", false, styles) === "border-box";
@@ -3717,13 +3735,7 @@
       jQuery2.cssHooks[dimension] = {
         get: function(elem, computed, extra) {
           if (computed) {
-            return rdisplayswap.test(jQuery2.css(elem, "display")) && // Support: Safari <=8 - 12+, Chrome <=73+
-            // Table columns in WebKit/Blink have non-zero offsetWidth & zero
-            // getBoundingClientRect().width unless display is changed.
-            // Support: IE <=11+
-            // Running getBoundingClientRect on a disconnected node
-            // in IE throws an error.
-            (!elem.getClientRects().length || !elem.getBoundingClientRect().width) ? swap(elem, cssShow, function() {
+            return jQuery2.css(elem, "display") === "none" ? swap(elem, cssShow, function() {
               return getWidthOrHeight(elem, dimension, extra);
             }) : getWidthOrHeight(elem, dimension, extra);
           }
@@ -5590,12 +5602,9 @@
         keepScripts = context;
         context = false;
       }
-      var base, parsed, scripts;
+      var parsed, scripts;
       if (!context) {
-        context = document$1.implementation.createHTMLDocument("");
-        base = context.createElement("base");
-        base.href = document$1.location.href;
-        context.head.appendChild(base);
+        context = new window2.DOMParser().parseFromString("", "text/html");
       }
       parsed = rsingleTag.exec(data);
       scripts = !keepScripts && [];
@@ -5874,6 +5883,7 @@
         jQuery2.ready(true);
       }
     };
+    jQuery2.expr[":"] = jQuery2.expr.filters = jQuery2.expr.pseudos;
     if (typeof define === "function" && define.amd) {
       define("jquery", [], function() {
         return jQuery2;
@@ -5897,8 +5907,137 @@
   var jQuery = jQueryFactory(window, true);
   var jquery_module_default = jQuery;
 
+  // src/configManager.js
+  var ConfigManager = class {
+    constructor() {
+      this.defaultConfig = {
+        providerUrl: "https://api.together.xyz/v1/chat/completions",
+        apiKey: "",
+        model: "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+        systemPrompt: "You are a helpful assistant that analyzes emails."
+      };
+      this.loadConfig();
+    }
+    // Load configuration from localStorage
+    loadConfig() {
+      try {
+        const savedConfig = localStorage.getItem("ai-extension-config");
+        if (savedConfig) {
+          this.config = __spreadValues(__spreadValues({}, this.defaultConfig), JSON.parse(savedConfig));
+        } else {
+          this.config = __spreadValues({}, this.defaultConfig);
+        }
+      } catch (error) {
+        console.error("Error loading configuration:", error);
+        this.config = __spreadValues({}, this.defaultConfig);
+      }
+    }
+    // Save configuration to localStorage
+    saveConfig(config) {
+      try {
+        this.config = __spreadValues(__spreadValues({}, this.config), config);
+        localStorage.setItem("ai-extension-config", JSON.stringify(this.config));
+      } catch (error) {
+        console.error("Error saving configuration:", error);
+      }
+    }
+    // Get current configuration
+    getConfig() {
+      return __spreadValues({}, this.config);
+    }
+    // Update specific configuration values
+    updateConfig(key, value) {
+      this.config[key] = value;
+      this.saveConfig(this.config);
+    }
+    // Reset to default configuration
+    resetToDefault() {
+      this.config = __spreadValues({}, this.defaultConfig);
+      this.saveConfig(this.config);
+    }
+  };
+  var configManager = new ConfigManager();
+  var configManager_default = configManager;
+
+  // src/aiService.js
+  var AIService = class {
+    constructor(config = {}) {
+      this.config = __spreadValues(__spreadValues({}, configManager_default.getConfig()), config);
+    }
+    call(instruction, content, emailId, cacheKey) {
+      return __async(this, null, function* () {
+        const cacheFullKey = `${emailId}_${cacheKey}`;
+        const cachedResponse = this.getCachedResponse(cacheFullKey);
+        if (cachedResponse) {
+          console.log(`Using cached response for ${cacheFullKey}`);
+          return cachedResponse;
+        }
+        const response = yield this.makeRequest(instruction, content);
+        this.setCachedResponse(cacheFullKey, response);
+        return response;
+      });
+    }
+    makeRequest(instruction, content) {
+      return __async(this, null, function* () {
+        const currentConfig = configManager_default.getConfig();
+        const response = yield fetch(currentConfig.providerUrl, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${currentConfig.apiKey}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            model: currentConfig.model,
+            messages: [
+              { role: "system", content: currentConfig.systemPrompt },
+              { role: "user", content: `${instruction}
+
+${content}` }
+            ]
+          })
+        });
+        if (!response.ok) {
+          throw new Error(`API call failed: ${response.statusText}`);
+        }
+        const result = yield response.json();
+        return result.choices[0].message.content;
+      });
+    }
+    // Cache helper functions
+    getCachedResponse(key) {
+      try {
+        const cachedData = localStorage.getItem(key);
+        return cachedData ? JSON.parse(cachedData) : null;
+      } catch (error) {
+        console.error("Cache retrieval error:", error);
+        return null;
+      }
+    }
+    setCachedResponse(key, data) {
+      try {
+        localStorage.setItem(key, JSON.stringify(data));
+      } catch (error) {
+        console.error("Cache storage error:", error);
+      }
+    }
+    // Method to update configuration
+    updateConfig(newConfig) {
+      configManager_default.saveConfig(newConfig);
+      this.config = __spreadValues(__spreadValues({}, this.config), newConfig);
+    }
+    // Method to get current configuration
+    getConfig() {
+      return configManager_default.getConfig();
+    }
+  };
+  var aiService_default = AIService;
+
   // src/api.js
-  var OPENAI_API_KEY = "98a9f3a23cf7b83243500ead07874aca741dcb34c4031abd3129794411f594a7";
+  var aiService = new aiService_default({
+    providerUrl: "https://api.together.xyz/v1/chat/completions",
+    apiKey: "98a9f3a23cf7b83243500ead07874aca741dcb34c4031abd3129794411f594a7",
+    model: "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"
+  });
   var APIQueue = class {
     constructor() {
       this.queue = [];
@@ -5933,71 +6072,179 @@
     }
   };
   var apiQueue = new APIQueue();
-  function getCachedResponse(key) {
-    const cachedData = localStorage.getItem(key);
-    return cachedData ? JSON.parse(cachedData) : null;
-  }
-  function setCachedResponse(key, data) {
-    localStorage.setItem(key, JSON.stringify(data));
-  }
-  function callOpenAI(instruction, content, emailId, cacheKey) {
+  function callAI(instruction, content, emailId, cacheKey) {
     return __async(this, null, function* () {
-      const cacheFullKey = `${emailId}_${cacheKey}`;
-      const cachedResponse = getCachedResponse(cacheFullKey);
-      if (cachedResponse) {
-        console.log(`Using cached response for ${cacheFullKey}`);
-        return cachedResponse;
-      }
       return apiQueue.enqueue(() => __async(this, null, function* () {
-        const response = yield fetch("https://api.together.xyz/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${OPENAI_API_KEY}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            model: "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
-            messages: [
-              { role: "system", content: "You are a helpful assistant that analyzes emails." },
-              { role: "user", content: `${instruction}
-
-${content}` }
-            ]
-          })
-        });
-        if (!response.ok) {
-          throw new Error(`API call failed: ${response.statusText}`);
-        }
-        const result = yield response.json();
-        const apiResponse = result.choices[0].message.content;
-        setCachedResponse(cacheFullKey, apiResponse);
-        return apiResponse;
+        return yield aiService.call(instruction, content, emailId, cacheKey);
       }));
     });
   }
   function generateSummary(emailBody, emailId) {
     return __async(this, null, function* () {
-      return yield callOpenAI("Summarize the following email:", emailBody, emailId, "summary");
+      return yield callAI("Summarize the following email:", emailBody, emailId, "summary");
     });
   }
   function extractStructuredData(emailBody, emailId) {
     return __async(this, null, function* () {
-      const jsonString = yield callOpenAI("Extract key information from this email as YAML. Do not share anything other than the YAML in the reply.", emailBody, emailId, "structured_data");
+      const jsonString = yield callAI("Extract key information from this email as YAML. Do not share anything other than the YAML in the reply.", emailBody, emailId, "structured_data");
       return jsonString;
     });
   }
   function generateReply(emailBody, emailId) {
     return __async(this, null, function* () {
-      return yield callOpenAI("Generate a potential reply to this email:", emailBody, emailId, "reply");
+      return yield callAI("Generate a potential reply to this email:", emailBody, emailId, "reply");
     });
   }
   function generateInboxSummary(emailSummaries) {
     return __async(this, null, function* () {
-      return yield callOpenAI("Summarize the state of this inbox based on these recent emails:", emailSummaries, "inbox", "inbox_summary");
+      return yield callAI("Summarize the state of this inbox based on these recent emails:", emailSummaries, "inbox", "inbox_summary");
     });
   }
 
+  // src/aiConfig.js
+  var defaultConfig = {
+    providerUrl: "https://api.together.xyz/v1/chat/completions",
+    apiKey: "YOUR_API_KEY_HERE",
+    model: "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+    systemPrompt: "You are a helpful assistant that analyzes emails."
+  };
+
+  // src/settingsPanel.js
+  function createSettingsPanel(aiService3) {
+    const settingsPanel = $(`
+        <div id="ai-settings-panel" class="ai-settings-panel">
+            <h3>AI Service Configuration</h3>
+            <div class="form-group">
+                <label for="provider-url">Provider URL:</label>
+                <input type="text" id="provider-url" class="form-control" placeholder="https://api.openai.com/v1/chat/completions">
+            </div>
+            <div class="form-group">
+                <label for="api-key">API Key:</label>
+                <input type="password" id="api-key" class="form-control" placeholder="Your API key">
+            </div>
+            <div class="form-group">
+                <label for="model">Model:</label>
+                <input type="text" id="model" class="form-control" placeholder="gpt-4">
+            </div>
+            <div class="form-group">
+                <label for="system-prompt">System Prompt:</label>
+                <textarea id="system-prompt" class="form-control" rows="3">You are a helpful assistant that analyzes emails.</textarea>
+            </div>
+            <div class="button-group">
+                <button id="save-settings" class="btn btn-primary">Save Settings</button>
+                <button id="reset-settings" class="btn btn-secondary">Reset to Default</button>
+            </div>
+        </div>
+    `);
+    $("head").append(`
+        <style>
+            .ai-settings-panel {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 400px;
+                background: white;
+                border: 1px solid #ccc;
+                border-radius: 8px;
+                padding: 20px;
+                z-index: 2000;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                display: none;
+            }
+            
+            .ai-settings-panel.active {
+                display: block;
+            }
+            
+            .ai-settings-panel h3 {
+                margin-top: 0;
+                text-align: center;
+            }
+            
+            .form-group {
+                margin-bottom: 15px;
+            }
+            
+            .form-group label {
+                display: block;
+                margin-bottom: 5px;
+                font-weight: bold;
+            }
+            
+            .form-control {
+                width: 100%;
+                padding: 8px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                box-sizing: border-box;
+            }
+            
+            .button-group {
+                text-align: center;
+                margin-top: 20px;
+            }
+            
+            .btn {
+                padding: 8px 16px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                margin: 0 5px;
+            }
+            
+            .btn-primary {
+                background-color: #4285f4;
+                color: white;
+            }
+            
+            .btn-secondary {
+                background-color: #f1f3f4;
+                color: #5f6368;
+            }
+        </style>
+    `);
+    $("body").append(settingsPanel);
+    const currentConfig = aiService3.getConfig();
+    $("#provider-url").val(currentConfig.providerUrl);
+    $("#api-key").val(currentConfig.apiKey);
+    $("#model").val(currentConfig.model);
+    $("#system-prompt").val(currentConfig.systemPrompt);
+    $("#save-settings").on("click", function() {
+      const newConfig = {
+        providerUrl: $("#provider-url").val(),
+        apiKey: $("#api-key").val(),
+        model: $("#model").val(),
+        systemPrompt: $("#system-prompt").val()
+      };
+      aiService3.updateConfig(newConfig);
+      alert("Settings saved successfully!");
+      settingsPanel.removeClass("active");
+    });
+    $("#reset-settings").on("click", function() {
+      if (confirm("Are you sure you want to reset to default settings?")) {
+        aiService3.updateConfig({
+          providerUrl: "https://api.together.xyz/v1/chat/completions",
+          apiKey: "",
+          model: "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+          systemPrompt: "You are a helpful assistant that analyzes emails."
+        });
+        const currentConfig2 = aiService3.getConfig();
+        $("#provider-url").val(currentConfig2.providerUrl);
+        $("#api-key").val(currentConfig2.apiKey);
+        $("#model").val(currentConfig2.model);
+        $("#system-prompt").val(currentConfig2.systemPrompt);
+        alert("Settings reset to default!");
+      }
+    });
+    return settingsPanel;
+  }
+  function toggleSettingsPanel(panel) {
+    panel.toggleClass("active");
+  }
+
   // src/extension.js
+  var aiService2 = new aiService_default(defaultConfig);
   var loaderId = setInterval(() => {
     if (!window._gmailjs) {
       return;
@@ -6012,6 +6259,10 @@ ${content}` }
       const userEmail = gmail.get.user_email();
       console.log("Hello, " + userEmail + ". This is your Gmail Assistant!");
       injectSidebarAndButton();
+      const settingsPanel = createSettingsPanel(aiService2);
+      jquery_module_default("#gmail-assistant-settings").on("click", function() {
+        toggleSettingsPanel(settingsPanel);
+      });
       gmail.observe.on("view_email", (domEmail) => {
         console.log("Looking at email:", domEmail);
         const emailData = gmail.new.get.email_data(domEmail);
@@ -6030,6 +6281,13 @@ ${content}` }
                 <circle cx="12" cy="12" r="10"></circle>
                 <path d="M12 16v-4"></path>
                 <path d="M12 8h.01"></path>
+            </svg>
+        </button>
+        <button id="gmail-assistant-settings" class="gmail-assistant-settings">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M12 1v6m0 6v6"></path>
+                <path d="M3 12h6m6 0h6"></path>
             </svg>
         </button>
     `);
@@ -6074,6 +6332,8 @@ ${content}` }
     `);
     jquery_module_default("#send-auto-reply").on("click", handleAutoReply);
     jquery_module_default("#gmail-assistant-toggle").on("click", toggleSidebar);
+    jquery_module_default("#gmail-assistant-settings").on("click", function() {
+    });
     jquery_module_default(".tab-button").on("click", function() {
       jquery_module_default(".tab-button").removeClass("active");
       jquery_module_default(this).addClass("active");
@@ -6102,6 +6362,26 @@ ${content}` }
             .gmail-assistant-toggle:hover {
                 background-color: #3367d6;
             }
+            .gmail-assistant-settings {
+                position: fixed;
+                right: 20px;
+                bottom: 80px;
+                width: 50px;
+                height: 50px;
+                border-radius: 25px;
+                background-color: #34a853;
+                color: white;
+                border: none;
+                cursor: pointer;
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            }
+            .gmail-assistant-settings:hover {
+                background-color: #2d9247;
+            }
             .gmail-assistant-sidebar {
                 position: fixed;
                 right: -300px;
@@ -6112,7 +6392,7 @@ ${content}` }
                 border-left: 1px solid #ccc;
                 padding: 20px;
                 overflow-y: auto;
-                z-index: 1000;
+                z-index: 1100;
                 transition: right 0.3s ease-in-out;
             }
             .gmail-assistant-sidebar.open {
@@ -6323,14 +6603,14 @@ Snippet: ${email.snippet}`).join("\n\n");
 
 jquery/dist-module/jquery.module.js:
   (*!
-   * jQuery JavaScript Library v4.0.0-beta.2
+   * jQuery JavaScript Library v4.0.0-rc.1
    * https://jquery.com/
    *
    * Copyright OpenJS Foundation and other contributors
    * Released under the MIT license
-   * https://jquery.org/license
+   * https://jquery.com/license/
    *
-   * Date: 2024-07-17T13:32Z
+   * Date: 2025-08-11T16:40Z
    *)
 */
 //# sourceMappingURL=extension.js.map

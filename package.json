@@ -1,23 +1,32 @@
 {
-    "name": "gmail-assistant",
+    "name": "anouk",
     "version": "1.0.0",
-    "description": "A Gmail extension for email analysis and automatic replies using GPT-4 and HTMX",
-    "main": "",
+    "description": "A framework for creating AI-powered browser extensions with support for any OpenAI-compatible provider",
+    "author": "Dipankar Sarkar <me@dipankar.name>",
+    "main": "src/index.js",
+    "bin": {
+        "anouk": "./bin/anouk-cli.js"
+    },
     "scripts": {
         "deps": "npm install",
         "stage": "mkdir dist || echo Dist already exists.",
-        "bundle": "esbuild src/gmailJsLoader.js src/extension.js --outdir=dist/ --bundle --sourcemap --target=es6",
+        "bundle": "esbuild src/gmailJsLoader.js src/extension.js src/aiService.js src/configManager.js src/settingsPanel.js --outdir=dist/ --bundle --sourcemap --target=es6",
         "build": "npm run stage && npm run bundle",
         "dev": "npm run bundle -- --watch"
     },
     "author": "Your Name",
     "license": "ISC",
+    "keywords": [
+        "ai",
+        "browser-extension",
+        "openai",
+        "llm",
+        "chrome-extension",
+        "gmail"
+    ],
     "dependencies": {
         "gmail-js": "^1.1.14",
-        "htmx.org": "^1.9.5",
-        "jquery": "^4.0.0-beta",
-        "sqlite": "^5.1.1",
-        "sqlite3": "^5.1.7"
+        "jquery": "^4.0.0-beta"
     },
     "devDependencies": {
         "esbuild": "^0.23.0"
