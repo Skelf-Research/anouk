@@ -1,0 +1,69 @@
+site_name: Anouk Documentation
+site_description: AI-powered browser extension framework with universal OpenAI-compatible provider support
+site_url: https://anouk.dev
+repo_url: https://github.com/your-org/anouk
+repo_name: anouk
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.copy
+
+plugins:
+  - search
+  - tags
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+  - attr_list
+  - md_in_html
+  - tables
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Quick Start: getting-started/quickstart.md
+    - Installation: getting-started/installation.md
+    - Your First Extension: getting-started/first-extension.md
+  - Guides:
+    - Configuration: guides/configuration.md
+    - AI Providers: guides/providers.md
+    - Building Extensions: guides/building-extensions.md
+  - Reference:
+    - API Reference: reference/api.md
+    - CLI Reference: reference/cli.md
+    - Configuration Options: reference/config-options.md
+  - Examples:
+    - Gmail Assistant: examples/gmail-assistant.md
+    - Custom Extensions: examples/custom-extensions.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/your-org/anouk
