@@ -1,176 +1,121 @@
-# Anouk - AI Browser Extension Framework
+# Anouk
 
-## Overview
+[![npm version](https://img.shields.io/npm/v/anouk.svg)](https://www.npmjs.com/package/anouk)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/skelf-research/anouk/pulls)
+[![Documentation](https://img.shields.io/badge/docs-skelfresearch.com-blue)](https://docs.skelfresearch.com/anouk)
 
-Anouk is a framework for creating browser extensions with AI capabilities. It provides a flexible foundation for developers to build extensions that work with any OpenAI-compatible provider, including OpenAI, Together.xyz, Anthropic, and local models like Ollama.
+**Build AI-powered browser extensions in minutes, not days.**
 
-The framework includes the Gmail Assistant as a reference implementation showing how to build a powerful email productivity tool.
+Anouk is a lightweight framework for creating browser extensions with AI capabilities. Plug in any OpenAI-compatible provider (OpenAI, Anthropic, Together.xyz, Ollama, etc.) and start building.
 
-## Features
+[Documentation](https://docs.skelfresearch.com/anouk) | [GitHub](https://github.com/skelf-research/anouk)
 
-- **Multi-Provider Support**: Works with any OpenAI-compatible API provider
-- **Configurable UI Components**: Reusable sidebar, floating buttons, and settings panels
-- **Caching System**: Built-in caching to reduce API calls
-- **Rate Limiting**: Queue management for API calls
-- **Easy Configuration**: In-extension settings panel for runtime configuration
-- **Modular Design**: Extensible architecture for custom functionality
-- **CLI Tool**: Command-line interface for generating projects and templates
+## Quick Start
 
-## Installation
+```bash
+# Install globally
+npm install -g anouk
 
-### From npm (Recommended)
+# Create a new extension
+anouk init my-ai-extension
+cd my-ai-extension
 
-You can install Anouk directly from npm:
+# Build and load in Chrome
+npm run build
+```
+
+Then load the extension in Chrome: `chrome://extensions` → Enable Developer Mode → Load Unpacked → Select your project folder.
+
+## Use as a Library
 
 ```bash
 npm install anouk
 ```
 
-### From Source
+```javascript
+import { AIService } from 'anouk';
 
-1. Clone this repository:
-   ```
-   git clone https://github.com/yourusername/anouk.git
-   cd anouk
-   ```
+const ai = new AIService({
+  providerUrl: 'https://api.openai.com/v1/chat/completions',
+  apiKey: process.env.OPENAI_API_KEY,
+  model: 'gpt-4'
+});
 
-2. Install dependencies:
-   ```
-   npm install
-   ```
-
-3. Build the extension:
-   ```
-   npm run build
-   ```
-
-4. Load the extension in Chrome:
-   - Open Chrome and navigate to `chrome://extensions`
-   - Enable "Developer mode" in the top right corner
-   - Click "Load unpacked" and select the project directory
-
-## CLI Usage
-
-Anouk provides a command-line interface for generating projects and templates:
-
-```
-anouk <command> [options]
-
-Commands:
-  init <project-name>        Initialize a new Anouk project
-  generate <template> <name> Generate a template file
-  help                       Show help message
-
-Templates:
-  extension                  Generate a basic extension template
-  service                    Generate an AI service template
-  config                     Generate a configuration template
-
-Examples:
-  anouk init my-extension
-  anouk generate extension email-analyzer
-  anouk generate service custom-ai-service
+const response = await ai.call('Summarize:', content, 'request-id');
 ```
 
-When installed from npm, you can use the CLI tool directly from your terminal. If you're using npx, you can run:
+## Features
 
-```
-npx anouk <command> [options]
+| Feature | Description |
+|---------|-------------|
+| **Multi-Provider** | OpenAI, Anthropic, Together.xyz, Ollama, Hugging Face |
+| **Built-in Caching** | Reduce API costs with intelligent response caching |
+| **Rate Limiting** | Queue management to stay within provider limits |
+| **UI Components** | Pre-built sidebar, floating buttons, settings panels |
+| **CLI Scaffolding** | Generate extensions, services, and configs instantly |
+
+## CLI Commands
+
+```bash
+anouk init <project-name>              # Create new extension project
+anouk generate extension <name>        # Generate extension template
+anouk generate service <name>          # Generate AI service template
+anouk generate config <name>           # Generate config template
 ```
 
 ## Configuration
 
-The extension now supports any OpenAI-compatible provider. You can configure the AI service through the settings panel in the extension UI or programmatically.
+### Via Settings Panel (Runtime)
+Click the settings button in your extension UI to configure provider, API key, model, and system prompt.
 
-### Using the Settings Panel
+### Via Code
 
-1. Click the green settings button in the bottom-right corner of Gmail
-2. Enter your provider URL, API key, model name, and system prompt
-3. Click "Save Settings"
-
-### Programmatic Configuration
-
-You can also configure the AI service programmatically by modifying the `src/aiConfig.js` file or by passing configuration to the AIService constructor.
+```javascript
+// src/aiConfig.js
+export default {
+  providerUrl: 'https://api.together.xyz/v1/chat/completions',
+  apiKey: 'your-api-key',
+  model: 'meta-llama/Llama-3-70b-chat-hf',
+  systemPrompt: 'You are a helpful assistant.'
+};
+```
 
 ### Supported Providers
 
-The extension has predefined configurations for:
-- Together.xyz (default)
-- OpenAI
-- Anthropic Claude
-- Ollama (local models)
-- Hugging Face
-
-Example configuration for OpenAI:
-```javascript
-{
-    providerUrl: 'https://api.openai.com/v1/chat/completions',
-    apiKey: 'your-openai-api-key',
-    model: 'gpt-4',
-    systemPrompt: 'You are a helpful assistant that analyzes emails.'
-}
-```
-
-## Usage as a Library
-
-Developers can use this project as a library to create their own AI-powered browser extensions:
-
-```javascript
-import { AIService } from 'anouk';
-
-// Create an AI service instance
-const aiService = new AIService({
-    providerUrl: 'https://api.openai.com/v1/chat/completions',
-    apiKey: 'your-api-key',
-    model: 'gpt-4'
-});
-
-// Make AI calls
-const response = await aiService.call(
-    'Summarize this text:', 
-    'Your content here', 
-    'unique-id', 
-    'cache-key'
-);
-```
-
-After installing from npm, you can import and use the Anouk framework in your own projects as shown above.
-
-## Development
-
-- Run the development build with watch mode:
-  ```
-  npm run dev
-  ```
-- The extension will automatically rebuild when you make changes to the source files.
+| Provider | URL |
+|----------|-----|
+| OpenAI | `https://api.openai.com/v1/chat/completions` |
+| Anthropic | `https://api.anthropic.com/v1/messages` |
+| Together.xyz | `https://api.together.xyz/v1/chat/completions` |
+| Ollama | `http://localhost:11434/v1/chat/completions` |
+| Hugging Face | `https://api-inference.huggingface.co/models/<model>` |
 
 ## Project Structure
 
-- `src/`: Source files
-  - `aiService.js`: Configurable AI service for any OpenAI-compatible provider
-  - `configManager.js`: Configuration management
-  - `settingsPanel.js`: UI component for in-extension settings
-  - `extension.js`: Main extension logic (Gmail Assistant reference implementation)
-  - `api.js`: API interaction and caching logic
-  - `gmailJsLoader.js`: Gmail.js initialization
-- `dist/`: Built files (generated after running `npm run build`)
-- `manifest.json`: Chrome extension manifest file
-- `bin/`: CLI tools
-- `templates/`: Template files for CLI
+```
+my-extension/
+├── src/
+│   ├── aiService.js      # AI provider abstraction
+│   ├── configManager.js  # Settings management
+│   ├── settingsPanel.js  # UI settings component
+│   └── extension.js      # Your extension logic
+├── dist/                 # Built files
+├── manifest.json         # Chrome extension manifest
+└── package.json
+```
 
-## Dependencies
+## Development
 
-- [gmail.js](https://github.com/KartikTalwar/gmail.js/): Library for interacting with Gmail
-- [esbuild](https://esbuild.github.io/): Fast JavaScript bundler
+```bash
+# Watch mode - auto-rebuilds on changes
+npm run dev
+```
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions welcome! Please open an issue or submit a PR.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Disclaimer
-
-This extension is not affiliated with or endorsed by Google. Use at your own risk and ensure compliance with Gmail's terms of service.
+[MIT](LICENSE) - [Skelf Research](https://github.com/skelf-research)
