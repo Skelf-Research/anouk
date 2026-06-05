@@ -1,8 +1,9 @@
 site_name: Anouk Documentation
 site_description: AI-powered browser extension framework with universal OpenAI-compatible provider support
-site_url: https://anouk.dev
-repo_url: https://github.com/your-org/anouk
-repo_name: anouk
+site_url: https://docs.skelfresearch.com/anouk/
+repo_url: https://github.com/Skelf-Research/anouk
+repo_name: Skelf-Research/anouk
+edit_uri: edit/main/documentation/docs/
 
 theme:
   name: material
